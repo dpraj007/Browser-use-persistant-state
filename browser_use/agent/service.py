@@ -94,6 +94,7 @@ class Agent(Generic[Context]):
 		llm: BaseChatModel,
 		# Optional parameters
 		browser: Browser | None = None,
+		close_browser_on_run: bool = True, #new variable to control browser
 		browser_context: BrowserContext | None = None,
 		controller: Controller[Context] = Controller(),
 		# Initial agent run parameters
@@ -158,6 +159,7 @@ class Agent(Generic[Context]):
 		# Core components
 		self.task = task
 		self.llm = llm
+		self.close_browser_on_run = close_browser_on_run
 		self.controller = controller
 		self.sensitive_data = sensitive_data
 
@@ -841,7 +843,7 @@ class Agent(Generic[Context]):
 				)
 			)
 
-			await self.close()
+			# await self.close()
 
 			if self.settings.generate_gif:
 				output_path: str = 'agent_history.gif'
@@ -1266,11 +1268,12 @@ class Agent(Generic[Context]):
 	async def close(self):
 		"""Close all resources"""
 		try:
-			# First close browser resources
-			if self.browser_context and not self.injected_browser_context:
-				await self.browser_context.close()
-			if self.browser and not self.injected_browser:
-				await self.browser.close()
+			if self.close_browser_on_run:
+				# First close browser resources
+				if self.browser_context and not self.injected_browser_context:
+					await self.browser_context.close()
+				if self.browser and not self.injected_browser:
+					await self.browser.close()
 
 			# Force garbage collection
 			gc.collect()
