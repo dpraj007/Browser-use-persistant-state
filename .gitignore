@@ -164,7 +164,8 @@ cython_debug/
 #.idea/
 temp
 tmp
-
+screenshots
+examples/runs
 
 .DS_Store
 
