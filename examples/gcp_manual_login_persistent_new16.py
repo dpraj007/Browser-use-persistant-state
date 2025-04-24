@@ -1,14 +1,23 @@
 #!/usr/bin/env python
 # gcp_manual_login_planner.py
 # ---------------------------------------------------------------
-#  ▸ execution  LLM : gpt‑4.1‑mini      (fast / cheap)
-#  ▸ planning   LLM : gpt‑4o            (bigger / better reasoning)
+#  ▸ execution  LLM : gemini-1.0-flash-001   (fast / cheap)
+#  ▸ planning   LLM : gemini-1.5-pro-001     (bigger / better reasoning)
 # ---------------------------------------------------------------
 
-import os, sys, asyncio, json, logging
+import os
+import sys
+import asyncio
+import json
+import logging
 from datetime import datetime
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
+import re
+
+# → Vertex AI / Gemini imports
+import vertexai
+from langchain_google_vertexai import ChatVertexAI
+
 from langchain.callbacks.base import BaseCallbackHandler
 from browser_use import Agent
 from mss import mss
@@ -22,6 +31,12 @@ load_dotenv()
 
 BASE_DIR = "runs"
 os.makedirs(BASE_DIR, exist_ok=True)
+
+# Initialize Vertex AI
+vertexai.init(
+    project=os.getenv("GOOGLE_CLOUD_PROJECT"),
+    location=os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1"),
+)
 
 # Enable LangChain debug logging (local only)
 os.environ["LANGCHAIN_DEBUG"] = "1"
@@ -65,12 +80,10 @@ class LLMLogCallback(BaseCallbackHandler):
             for generation in response.generations:
                 for gen in generation:
                     try:
-                        # Attempt to parse and pretty-print the JSON
                         json_response = json.loads(gen.text)
                         formatted_json = json.dumps(json_response, indent=4, ensure_ascii=False)
                         f.write(f"{formatted_json}\n")
                     except json.JSONDecodeError:
-                        # If not valid JSON, log as plain text
                         f.write(f"{gen.text}\n")
             f.write("\n")
             f.flush()
@@ -93,7 +106,7 @@ class ScreenshotHandler(logging.Handler):
         self.debug_file = os.path.join(self.screenshot_dir, "debug_log.txt")
 
     async def _capture(self, filename):
-        await asyncio.sleep(3)  # wait for page paint
+        await asyncio.sleep(3)
         try:
             with mss() as sct:
                 monitor = {"top": 100, "left": 100, "width": 1200, "height": 800}
@@ -144,32 +157,40 @@ class ScreenshotHandler(logging.Handler):
 # 5.  Main coroutine
 # -----------------------------------------------------------------
 async def main():
-    # Create unique run folder
     run_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     run_dir = os.path.join(BASE_DIR, f"run_{run_ts}")
     os.makedirs(run_dir, exist_ok=True)
 
-    # Set up log files for planner and executor
     planner_log_file = os.path.join(run_dir, "planner_log.txt")
     executor_log_file = os.path.join(run_dir, "executor_log.txt")
     run_log_file = os.path.join(run_dir, "run_log.txt")
 
-    # Set up general run logger
+    # General run logger
     run_logger = logging.getLogger("run")
     run_logger.setLevel(logging.INFO)
     run_file_handler = logging.FileHandler(run_log_file, encoding="utf-8")
     run_file_handler.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
     run_logger.addHandler(run_file_handler)
 
-    # Set up LLM callbacks
+    # LLM callbacks
     planner_callback = LLMLogCallback(planner_log_file)
     executor_callback = LLMLogCallback(executor_log_file)
 
     # -----------------------------------------------------------------
-    # 5‑A  First agent: open GCP sign‑in page
+    # 5-A  First agent: open GCP sign-in page
     # -----------------------------------------------------------------
-    exec_llm = ChatOpenAI(model="gpt-4.1", temperature=0.5, callbacks=[executor_callback])
-    plan_llm = ChatOpenAI(model="o4-mini", temperature=1.0, callbacks=[planner_callback])
+    exec_llm = ChatVertexAI(
+        model_name="gemini-2.5-pro-preview-03-25", 
+        temperature=0.5,
+        callbacks=[executor_callback],
+        max_retries=6,
+    )
+    plan_llm = ChatVertexAI(
+        model_name="gemini-2.5-pro-preview-03-25",
+        temperature=1.0,
+        callbacks=[planner_callback],
+        max_retries=6,
+    )
 
     first_agent = Agent(
         task="Navigate to Google Cloud Platform and go to sign in",
@@ -182,7 +203,6 @@ async def main():
         enable_memory=False,
     )
 
-    # Set up screenshot handler for this run
     screenshot_dir = os.path.join(run_dir, "screenshots")
     os.makedirs(screenshot_dir, exist_ok=True)
     log_json = os.path.join(run_dir, "log.json")
@@ -191,14 +211,10 @@ async def main():
     for name in ["", "browser_use", "agent", "controller"]:
         logging.getLogger(name).addHandler(handler)
 
-    # Log task start
-    run_logger.info(f"Task Started: Navigate to Google Cloud Platform and go to sign in")
-
-    # Run the agent
+    run_logger.info("Task Started: Navigate to Google Cloud Platform and go to sign in")
     run_logger.info("Running Agent for Task")
     history = await first_agent.run()
 
-    # Serialize and log agent history
     serialized_history = serialize_history(history)
     with open(os.path.join(run_dir, "run_result.json"), "w", encoding="utf-8") as f:
         json.dump(serialized_history, f, indent=2)
@@ -262,8 +278,16 @@ async def main():
                 break
 
             # Create new run folder for each command loop task
+            # Create a filesystem-safe folder name from the user’s action
+            
+
+            def sanitize(name: str) -> str:
+                    # replace any Windows-illegal chars with _
+                return re.sub(r'[<>:"/\\|?*]', "_", name)
+
             run_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-            task_run_dir = os.path.join(BASE_DIR, f"task_{act.replace(' ', '_')}_{run_ts}")
+            safe_act = sanitize(act).replace(" ", "_")
+            task_run_dir = os.path.join(BASE_DIR, f"task_{safe_act}_{run_ts}")
             os.makedirs(task_run_dir, exist_ok=True)
 
             # Set up log files for this task run
@@ -283,8 +307,20 @@ async def main():
             task_executor_callback = LLMLogCallback(task_executor_log)
 
             # Create new agent for this task
-            exec_llm_task = ChatOpenAI(model="gpt-4.1", temperature=0.5, callbacks=[task_executor_callback])
-            plan_llm_task = ChatOpenAI(model="o4-mini", temperature=1.0, callbacks=[task_planner_callback])
+            exec_llm_task = ChatVertexAI(
+                model_name="gemini-2.5-pro-preview-03-25",
+                streaming=True,
+                temperature=0.5,
+                callbacks=[task_executor_callback],
+                max_retries=6,
+            )
+            plan_llm_task = ChatVertexAI(
+                model_name="gemini-2.5-pro-preview-03-25",
+                streaming=True,
+                temperature=1.0,
+                callbacks=[task_planner_callback],
+                max_retries=6,
+            )
 
             fresh_agent = Agent(
                 task=act,
