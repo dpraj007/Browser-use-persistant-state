@@ -35,7 +35,7 @@ The primary output generated using this modified `browser-use` agent is a datase
 **Access the dataset here:**  
 [➡️ **GCP Automation Dataset (Dummy Link)**](https://drive.google.com/drive/folders/YOUR_DUMMY_SHARED_FOLDER_LINK_HERE)
 
-*(Please replace `YOUR_DUMMY_SHARED_FOLDER_LINK_HERE` with the actual link if available, or keep as is if purely illustrative)*
+
 
 ---
 
