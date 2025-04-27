@@ -1,197 +1,140 @@
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="./static/browser-use-dark.png">
   <source media="(prefers-color-scheme: light)" srcset="./static/browser-use.png">
   <img alt="Shows a black Browser Use Logo in light color mode and a white one in dark color mode." src="./static/browser-use.png"  width="full">
 </picture>
 
-<h1 align="center">Browser‑use — Dhairyasheel Patil Fork 🤖</h1>
+<h1 align="center">Browser‑use — GCP/AWS Automation Fork (NYU VLM Project) 🤖</h1>
 
-<!-- Badges still point to upstream so stargazers / docs links keep working -->
-[![GitHub stars](https://img.shields.io/github/stars/gregpr07/browser-use?style=social)](https://github.com/gregpr07/browser-use/stargazers)
-[![Discord](https://img.shields.io/discord/1303749220842340412?color=7289DA&label=Discord&logo=discord&logoColor=white)](https://link.browser-use.com/discord)
-[![Cloud](https://img.shields.io/badge/Cloud-☁️-blue)](https://cloud.browser-use.com)
-[![Documentation](https://img.shields.io/badge/Documentation-📕-blue)](https://docs.browser-use.com)
-[![Twitter Follow](https://img.shields.io/twitter/follow/Gregor?style=social)](https://x.com/gregpr07)
-[![Twitter Follow](https://img.shields.io/twitter/follow/Magnus?style=social)](https://x.com/mamagnus00)
-[![Weave Badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fapp.workweave.ai%2Fapi%2Frepository%2Fbadge%2Forg_T5Pvn3UBswTHIsN1dWS3voPg%2F881458615&labelColor=#EC6341)](https://app.workweave.ai/reports/repository/org_T5Pvn3UBswTHIsN1dWS3voPg/881458615)
+<!-- Badges pointing to upstream for community links -->
+[![GitHub stars](https://img.shields.io/github/stars/browser-use/browser-use?style=social)](https://github.com/browser-use/browser-use/stargazers)
+[![Discord](https://img.shields.io/discord/1303749220842340412?color=7289DA&label=Discord&logo=discord&logoColor=white)](https://link.browser-use.com/discord) <!-- Link to original Discord -->
+[![Documentation](https://img.shields.io/badge/Documentation-📕-blue)](https://docs.browser-use.com) <!-- Link to original Docs -->
 
-> **ℹ️ About this fork**  
-> This repository is a community fork maintained by **Dhairyasheel Patil**.  
-> It tracks the upstream project while adding:
-> - **Persistent Playwright profiles** (`user_data_dir`, `storage_state_path`) for seamless log‑in reuse  
-> - Example scripts for **AWS & GCP console automation** with manual one‑time MFA  
-> - A lightweight **session manager** for task queues  
-> - Extra observability hooks (Sentry / Laminar)  
-> If you just want the vanilla library, head to the [original repo](https://github.com/gregpr07/browser-use).
+> **ℹ️ About this fork**
+> This repository is a fork maintained by **Shubham Goel, Dhairyasheel Patil, Jasmitha Pissay Narayana, and Devarshi Chatterjee** for the NYU Tandon "Improving VLM Instruct Models to Perform Actions on New Environments" class project.
+> It tracks the upstream [browser-use](https://github.com/browser-use/browser-use) project while adding specific modifications for automating complex cloud console environments:
+> - **Persistent Playwright State:** Modified agent (`service.py`) to prevent browser closure (`close_browser_on_run=False`) and potentially leverage `user_data_dir` / `storage_state` for session reuse after manual login/MFA.
+> - **Enhanced Logging:** Integrated robust logging mechanisms to capture screenshot-instruction-action triples during automated task execution.
+> - **Cloud Console Focus:** Includes example scripts and configurations tailored for automating tasks within Google Cloud Platform (GCP) and initial experiments on Amazon Web Services (AWS).
+> - **Human-in-the-Loop Login:** Implemented a simple CLI prompt mechanism to pause execution, allow manual authentication, and then resume automation within the same browser session.
+>
+> If you need the standard library features, please refer to the [original repository](https://github.com/browser-use/browser-use).
 
-🌐 Browser‑use is the easiest way to connect your AI agents with the browser.
-
-💡 See what others are building and share your projects in our [Discord](https://link.browser-use.com/discord)! Want Swag? Check out our [Merch store](https://browsermerch.com).
-
-🌤️ Skip the setup – try our <b>hosted version</b> for instant browser automation! <b>[Try the cloud ☁︎](https://cloud.browser-use.com)</b>.
-
-# Quick start
-
-
-With pip (Python>=3.11):
-
-```bash
-pip install browser-use
-```
-
-Install Playwright:
-```bash
-playwright install chromium
-```
-
-Spin up your agent:
-
-```python
-from langchain_openai import ChatOpenAI
-from browser_use import Agent
-import asyncio
-from dotenv import load_dotenv
-load_dotenv()
-
-async def main():
-    agent = Agent(
-        task="Compare the price of gpt-4o and DeepSeek-V3",
-        llm=ChatOpenAI(model="gpt-4o"),
-    )
-    await agent.run()
-
-asyncio.run(main())
-```
-
-Add your API keys for the provider you want to use to your `.env` file.
-
-```bash
-OPENAI_API_KEY=
-ANTHROPIC_API_KEY=
-AZURE_ENDPOINT=
-AZURE_OPENAI_API_KEY=
-GEMINI_API_KEY=
-DEEPSEEK_API_KEY=
-```
-
-For other settings, models, and more, check out the [documentation 📕](https://docs.browser-use.com).
-
-### Test with UI
-
-You can test [browser-use with a UI repository](https://github.com/browser-use/web-ui)
-
-Or simply run the gradio example:
-
-```
-uv pip install gradio
-```
-
-```bash
-python examples/ui/gradio_demo.py
-```
-
-# Demos
-
-<br/><br/>
-
-[Task](https://github.com/browser-use/browser-use/blob/main/examples/use-cases/shopping.py): Add grocery items to cart, and checkout.
-
-[![AI Did My Groceries](https://github.com/user-attachments/assets/d9359085-bde6-41d4-aa4e-6520d0221872)](https://www.youtube.com/watch?v=L2Ya9PYNns8)
-
-<br/><br/>
-
-Prompt: Add my latest LinkedIn follower to my leads in Salesforce.
-
-![LinkedIn to Salesforce](https://github.com/user-attachments/assets/1440affc-a552-442e-b702-d0d3b277b0ae)
-
-<br/><br/>
-
-[Prompt](https://github.com/browser-use/browser-use/blob/main/examples/use-cases/find_and_apply_to_jobs.py): Read my CV & find ML jobs, save them to a file, and then start applying for them in new tabs, if you need help, ask me.'
-
-https://github.com/user-attachments/assets/171fb4d6-0355-46f2-863e-edb04a828d04
-
-<br/><br/>
-
-[Prompt](https://github.com/browser-use/browser-use/blob/main/examples/browser/real_browser.py): Write a letter in Google Docs to my Papa, thanking him for everything, and save the document as a PDF.
-
-![Letter to Papa](https://github.com/user-attachments/assets/242ade3e-15bc-41c2-988f-cbc5415a66aa)
-
-<br/><br/>
-
-[Prompt](https://github.com/browser-use/browser-use/blob/main/examples/custom-functions/save_to_file_hugging_face.py): Look up models with a license of cc-by-sa-4.0 and sort by most likes on Hugging face, save top 5 to file.
-
-https://github.com/user-attachments/assets/de73ee39-432c-4b97-b4e8-939fd7f323b3
-
-<br/><br/>
-
-## More examples
-
-For more examples see the [examples](examples) folder or join the [Discord](https://link.browser-use.com/discord) and show off your project.
-
-# Vision
-
-Tell your computer what to do, and it gets it done.
-
-## Roadmap
-
-### Agent
-
-- [ ] Improve agent memory (summarize, compress, RAG, etc.)
-- [ ] Enhance planning capabilities (load website specific context)
-- [ ] Reduce token consumption (system prompt, DOM state)
-
-### DOM Extraction
-
-- [ ] Improve extraction for datepickers, dropdowns, special elements
-- [ ] Improve state representation for UI elements
-
-### Rerunning tasks
-
-- [ ] LLM as fallback
-- [ ] Make it easy to define workflow templates where LLM fills in the details
-- [ ] Return playwright script from the agent
-
-### Datasets
-
-- [ ] Create datasets for complex tasks
-- [ ] Benchmark various models against each other
-- [ ] Fine-tuning models for specific tasks
-
-### User Experience
-
-- [ ] Human-in-the-loop execution
-- [ ] Improve the generated GIF quality
-- [ ] Create various demos for tutorial execution, job application, QA testing, social media, etc.
-
-## Contributing
-
-We love contributions! Feel free to open issues for bugs or feature requests. To contribute to the docs, check out the `/docs` folder.
-
-## Local Setup
-
-To learn more about the library, check out the [local setup 📕](https://docs.browser-use.com/development/local-setup).
-
-
-`main` is the primary development branch with frequent changes. For production use, install a stable [versioned release](https://github.com/browser-use/browser-use/releases) instead.
+🌐 Browser‑use is the easiest way to connect your AI agents with the browser, adapted here for complex cloud console automation and data generation.
 
 ---
 
-## Cooperations
+## Project Context & Dataset
 
-We are forming a commission to define best practices for UI/UX design for browser agents.
-Together, we're exploring how software redesign improves the performance of AI agents and gives these companies a competitive advantage by designing their existing software to be at the forefront of the agent age.
+This fork was instrumental in generating a dataset for fine-tuning Vision-Language Models (VLMs) to perform administrative tasks in cloud consoles. We automated over 200 distinct GCP workflows (e.g., VM provisioning, IAM role configuration, storage bucket setup), capturing high-resolution screenshots, the natural language sub-instruction, and the precise DOM action taken at each step.
 
-Email [Toby](mailto:tbiddle@loop11.com?subject=I%20want%20to%20join%20the%20UI/UX%20commission%20for%20AI%20agents&body=Hi%20Toby%2C%0A%0AI%20found%20you%20in%20the%20browser-use%20GitHub%20README.%0A%0A) to apply for a seat on the committee.
+💾 **Access the Generated Dataset:**
+The complete dataset, containing 10,061 screenshot-instruction-action triples, along with processing scripts, is available here:
 
-## Swag
+➡️ **[Link to GCP Automation Dataset (Google Drive)](https://drive.google.com/drive/folders/DUMMY_LINK_REPLACE_ME)** ⬅️
+*(Please replace `DUMMY_LINK_REPLACE_ME` with your actual shareable Google Drive folder ID)*
 
-Want to show off your Browser-use swag? Check out our [Merch store](https://browsermerch.com). Good contributors will receive swag for free 👀.
+This dataset serves as the foundation for the future work outlined in our project report, aiming to improve VLM performance in interactive web environments.
 
-## Citation
+---
 
-If you use Browser Use in your research or project, please cite:
+## Quick Start (Using this Fork's Features)
 
-```bibtex
+Ensure you have Python >= 3.11.
+
+Install the base library (this fork assumes modifications are applied locally or installed from this fork's source):
+```bash
+pip install browser-use
+
+
+Install Playwright browser binaries:
+
+playwright install chromium
+IGNORE_WHEN_COPYING_START
+content_copy
+download
+Use code with caution.
+Bash
+IGNORE_WHEN_COPYING_END
+
+Example script demonstrating persistent state and a GCP task (adapt LLM provider/model as needed):
+
+# Ensure you have your LLM API key in a .env file (e.g., GEMINI_API_KEY)
+# or configure the client appropriately.
+from langchain_google_genai import ChatGoogleGenerativeAI # Or other provider
+from browser_use import Agent
+import asyncio
+from dotenv import load_dotenv
+
+load_dotenv()
+
+async def main():
+    # Note: This example assumes modifications for persistence
+    # and human-in-the-loop login are active in your local Agent setup.
+    agent = Agent(
+        # Example GCP Task
+        task="Navigate to Google Cloud Console 'IAM & Admin' page, then filter the principal list to show only 'Service Accounts'.",
+        llm=ChatGoogleGenerativeAI(model="gemini-pro"), # Or "gemini-flash", etc.
+        # Add parameters here if your fork exposes them directly,
+        # otherwise ensure service.py is modified for persistence.
+        # e.g., close_browser_on_run=False (if exposed)
+    )
+
+    # The agent should pause for manual login if implemented
+    print("Agent starting. Please complete GCP login in the opened browser window if prompted, then press Enter in the console where the agent is running.")
+
+    await agent.run()
+
+    print("Agent run complete. Browser window should remain open if persistence is enabled.")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+IGNORE_WHEN_COPYING_START
+content_copy
+download
+Use code with caution.
+Python
+IGNORE_WHEN_COPYING_END
+
+Add required API keys to your .env file:
+
+# Example for Google Gemini
+GEMINI_API_KEY=your_google_api_key
+
+# Add keys for other providers if used (OpenAI, Anthropic, etc.)
+# OPENAI_API_KEY=
+# ANTHROPIC_API_KEY=
+IGNORE_WHEN_COPYING_START
+content_copy
+download
+Use code with caution.
+Bash
+IGNORE_WHEN_COPYING_END
+
+For base library settings and models, refer to the original documentation 📕.
+
+Project Goals & Future Work
+
+This fork and the generated dataset support our ongoing research into improving VLM agents for complex GUI interactions. Our future work, detailed in our project report, includes:
+
+Addressing Interaction Challenges: Developing robust solutions for scrolling, handling dynamic UI elements (pop-ups, async updates), and improving synthetic data realism within the GCP console.
+
+VLM Adaptation: Fine-tuning models like Qwen-2.5VL-7B using the generated dataset via Supervised Fine-Tuning (SFT) and exploring Reinforcement Fine-Tuning (RFT) for better data efficiency and reasoning.
+
+Reinforcement Learning: Investigating RL techniques to further optimize the agent's decision-making for multi-step tasks, focusing on robust reward design and environment interaction.
+
+Comprehensive Evaluation: Assessing agent performance using metrics beyond task completion, including interaction robustness, efficiency, and generalization within the GCP environment.
+
+Contributing to this Fork
+
+This fork was developed specifically for the NYU class project mentioned above. While direct contributions are not actively solicited, feel free to raise issues related to the specific modifications made here. For contributions to the core browser-use library, please engage with the original repository.
+
+Citation
+
+If you use the core Browser Use library in your research or project, please cite the original work:
+
 @software{browser_use2024,
   author = {Müller, Magnus and Žunič, Gregor},
   title = {Browser Use: Enable AI to control your browser},
@@ -199,15 +142,29 @@ If you use Browser Use in your research or project, please cite:
   publisher = {GitHub},
   url = {https://github.com/browser-use/browser-use}
 }
-```
+IGNORE_WHEN_COPYING_START
+content_copy
+download
+Use code with caution.
+Bibtex
+IGNORE_WHEN_COPYING_END
 
- <div align="center"> <img src="https://github.com/user-attachments/assets/06fa3078-8461-4560-b434-445510c1766f" width="400"/> 
- 
-[![Twitter Follow](https://img.shields.io/twitter/follow/Gregor?style=social)](https://x.com/gregpr07)
-[![Twitter Follow](https://img.shields.io/twitter/follow/Magnus?style=social)](https://x.com/mamagnus00)
- 
- </div>
+If you use the dataset generated by this fork or reference the specific modifications made for cloud console automation in your work, please cite our project report:
 
+@techreport{goel2024improvingvlm,
+  author    = {Goel, Shubham and Patil, Dhairyasheel and Narayana, Jasmitha Pissay and Chatterjee, Devarshi},
+  title     = {Improving VLM Instruct Models to Perform Actions on New Environments},
+  institution = {NYU Tandon School of Engineering},
+  year      = {2024},
+  note      = {Class Project Report}
+  % Add URL or specific identifier if available
+}
+IGNORE_WHEN_COPYING_START
+content_copy
+download
+Use code with caution.
+Bibtex
+IGNORE_WHEN_COPYING_END
 <div align="center">
-Made with ❤️ in Zurich and San Francisco
- </div>
+Fork maintained for NYU Tandon CDS Project - Spring 2024
+</div>
