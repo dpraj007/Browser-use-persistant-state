@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # gcp_manual_login_planner.py
-# ---------------------------------------------------------------
-#  ▸ execution  LLM : gemini-1.0-flash-001   (fast / cheap)
-#  ▸ planning   LLM : gemini-1.5-pro-001     (bigger / better reasoning)
-# ---------------------------------------------------------------
 
+from dotenv import load_dotenv
+import os
+load_dotenv()
 import os
 import sys
 import asyncio
@@ -287,6 +286,11 @@ async def main():
 
             run_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
             safe_act = sanitize(act).replace(" ", "_")
+            # Limit the length of the action description used in the folder name
+            MAX_ACT_LEN = 100  # Define a reasonable max length
+            if len(safe_act) > MAX_ACT_LEN:
+                safe_act = safe_act[:MAX_ACT_LEN]
+
             task_run_dir = os.path.join(BASE_DIR, f"task_{safe_act}_{run_ts}")
             os.makedirs(task_run_dir, exist_ok=True)
 
